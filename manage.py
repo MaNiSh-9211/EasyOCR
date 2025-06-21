@@ -3,8 +3,14 @@ import os
 import sys
 
 if __name__ == "__main__":
-    # Use production settings for Vercel deployment
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "OCRtesrect.settings_production")
+    # Use development settings by default for local development
+    # Set DJANGO_SETTINGS_MODULE environment variable to override
+    default_settings = os.environ.get(
+        'DJANGO_SETTINGS_MODULE', 
+        'OCRtesrect.settings_development'
+    )
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", default_settings)
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
