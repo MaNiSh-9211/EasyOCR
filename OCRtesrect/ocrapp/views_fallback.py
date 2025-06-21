@@ -6,7 +6,6 @@ import tempfile
 import io
 import requests
 import base64
-import json
 import os
 
 logger = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ def health_check(request):
         'message': 'OCR API is running'
     })
 
-def ocr_image_view(request):
+def ocr_image_view_fallback(request):
     extracted_text = None
     error_message = None
     
@@ -33,7 +32,7 @@ def ocr_image_view(request):
                     'error_message': error_message
                 })
             
-            # Validate file size (5MB limit for API)
+            # Validate file size (5MB limit)
             if image_file.size > 5 * 1024 * 1024:
                 error_message = "File size too large. Please upload an image smaller than 5MB."
                 return render(request, 'ocrapp/ocr_form.html', {
@@ -43,11 +42,13 @@ def ocr_image_view(request):
             # Read image data
             image_data = image_file.read()
             
-            # Convert to base64 for API
-            image_base64 = base64.b64encode(image_data).decode('utf-8')
+            # Try Tesseract first (if available), then fallback to API
+            extracted_text = try_tesseract_ocr(image_data)
             
-            # Use OCR.Space API (free tier available)
-            extracted_text = process_with_ocr_space(image_base64, image_file.name)
+            if not extracted_text:
+                # Fallback to OCR.Space API
+                image_base64 = base64.b64encode(image_data).decode('utf-8')
+                extracted_text = process_with_ocr_space(image_base64, image_file.name)
             
             if not extracted_text:
                 error_message = "Could not extract text from image. Please try again."
@@ -63,6 +64,30 @@ def ocr_image_view(request):
         'image_url': None,
         'error_message': error_message
     })
+
+def try_tesseract_ocr(image_data):
+    """Try to use Tesseract OCR if available"""
+    try:
+        import pytesseract
+        from PIL import Image
+        
+        # Convert to PIL Image
+        pil_image = Image.open(io.BytesIO(image_data))
+        
+        # Try to extract text with Tesseract
+        text = pytesseract.image_to_string(pil_image, lang='eng')
+        
+        if text and text.strip():
+            return text.strip()
+        else:
+            return None
+            
+    except ImportError:
+        logger.info("Tesseract not available, using API fallback")
+        return None
+    except Exception as e:
+        logger.error(f"Tesseract OCR error: {str(e)}")
+        return None
 
 def process_with_ocr_space(image_base64, filename):
     """Process image using OCR.Space API"""
@@ -100,4 +125,4 @@ def process_with_ocr_space(image_base64, filename):
             
     except Exception as e:
         logger.error(f"Error calling OCR API: {str(e)}")
-        return None
+        return None 

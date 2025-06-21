@@ -18,7 +18,7 @@ def health_check(request):
         'message': 'OCR API is running'
     })
 
-def ocr_image_view(request):
+def ocr_image_view_api(request):
     extracted_text = None
     error_message = None
     
@@ -101,3 +101,43 @@ def process_with_ocr_space(image_base64, filename):
     except Exception as e:
         logger.error(f"Error calling OCR API: {str(e)}")
         return None
+
+def process_with_google_vision(image_base64):
+    """Process image using Google Cloud Vision API (requires API key)"""
+    try:
+        # Google Cloud Vision API
+        url = f'https://vision.googleapis.com/v1/images:annotate?key={os.environ.get("GOOGLE_VISION_API_KEY")}'
+        
+        payload = {
+            'requests': [
+                {
+                    'image': {
+                        'content': image_base64
+                    },
+                    'features': [
+                        {
+                            'type': 'TEXT_DETECTION'
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        response = requests.post(url, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            if 'responses' in result and result['responses']:
+                text_annotations = result['responses'][0].get('textAnnotations', [])
+                if text_annotations:
+                    return text_annotations[0].get('description', '')
+            
+            return None
+        else:
+            logger.error(f"Google Vision API request failed: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error calling Google Vision API: {str(e)}")
+        return None 
