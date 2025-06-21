@@ -4,7 +4,8 @@
       "src": "wsgi.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "50mb"
+        "maxLambdaSize": "50mb",
+        "runtime": "python3.9"
       }
     }
   ],
@@ -26,7 +27,9 @@
     "DJANGO_SETTINGS_MODULE": "OCRtesrect.settings_production",
     "DATABASE_URL": "postgresql://USER:PASSWORD@HOST.neon.tech/neondb?sslmode=require",
     "SECRET_KEY": "django-insecure-n7g()%6=!npdm^+6^@f7e9-b6$_9b)cl)6_7+1il0r^ass0gj8",
-    "OCR_SPACE_API_KEY": "helloworld"
+    "OCR_SPACE_API_KEY": "helloworld",
+    "DEBUG": "False"
   },
-  "buildCommand": "bash build_files.sh"
+  "buildCommand": "bash build_files.sh",
+  "installCommand": "pip install -r requirements_vercel.txt"
 } 
