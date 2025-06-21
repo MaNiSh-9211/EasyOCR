@@ -1,0 +1,31 @@
+{
+  "builds": [
+    {
+      "src": "wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/media/(.*)",
+      "dest": "/media/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "wsgi.py"
+    }
+  ],
+  "env": {
+    "DJANGO_SETTINGS_MODULE": "OCRtesrect.settings_production",
+    "DATABASE_URL": "postgresql://USER:PASSWORD@HOST.neon.tech/neondb?sslmode=require",
+    "SECRET_KEY": "django-insecure-n7g()%6=!npdm^+6^@f7e9-b6$_9b)cl)6_7+1il0r^ass0gj8"
+  },
+  "buildCommand": "bash build_files.sh"
+} 
