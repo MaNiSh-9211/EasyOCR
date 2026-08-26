@@ -135,3 +135,5 @@ static/
 
 # Vercel
 .vercel 
+# --- security: local env & deps ---
+node_modules/
